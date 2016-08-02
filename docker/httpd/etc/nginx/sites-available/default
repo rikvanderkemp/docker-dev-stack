@@ -1,0 +1,23 @@
+server {
+    listen 80;
+
+    root /var/www/web;
+    index index.php index.html index.htm;
+
+    location = /favicon.ico { access_log off; log_not_found off; }
+
+    location / {
+           try_files $uri $uri/ /index.php$is_args$args;
+    }
+
+	location ~ \.php$ {
+		try_files $uri =404;
+		include fastcgi_params;
+		fastcgi_pass fpm:9000;
+		fastcgi_split_path_info ^(.+\.php)(.*)$;
+		fastcgi_index index.php;
+		fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+		fastcgi_param SYMFONY__ENV dev;
+	    fastcgi_param SYMFONY__DEBUG true;
+	}
+}

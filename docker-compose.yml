@@ -1,0 +1,51 @@
+version: '2'
+services:
+  db:
+    image: mysql:5.5
+    volumes:
+      - "./.data/db:/var/lib/mysql"
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: dev
+      MYSQL_DATABASE: dev
+      MYSQL_USER: dev
+      MYSQL_PASSWORD: dev
+    ports:
+        - "3306:3306"
+  fpm:
+    build:
+      context: .
+      dockerfile: docker/php-fpm/Dockerfile
+    ports:
+      - "9000:9000"
+    volumes:
+      - "./:/var/www"
+  solr:
+    build:
+      context: .
+      dockerfile: docker/solr/Dockerfile
+    ports:
+      - "8983:8983"
+    volumes:
+      - "./.data/solr/core/conf:/opt/solr-6.1.0/server/solr/core/conf"
+  httpd:
+    privileged: true
+    depends_on:
+      - fpm
+      - db
+      - solr
+    build:
+      context: .
+      dockerfile: docker/httpd/Dockerfile
+    volumes:
+      - "./:/var/www"
+    links:
+      - fpm
+      - db
+      - solr
+    ports:
+      - "80:80"
+    restart: always
+    environment:
+      DB_HOST: db:3306
+      DB_PASSWORD: ''
